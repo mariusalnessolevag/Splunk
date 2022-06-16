@@ -1,0 +1,257 @@
+<form theme="dark">
+  <label>Fleet Edge - Bandwidth Details</label>
+  <description>Note there is a 4 hour delay on the data in this dashboard which has been adjusted for the in the time range selector.</description>
+  <search id="planDetails">
+    <query>
+      | loadjob savedsearch="okheggdal:IM-TA-Global-Configurations:rp_factCibSubscriptions" | search nsdHostname=$selectedId$ | table subscriptionPlanName mirDownlink cirDownlink mirUplink cirUplink
+    </query>
+  </search>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="selectedImsi" depends="$fakeToken$">
+      <search>
+        <query>| loadjob savedsearch="okheggdal:IM-TA-Global-Configurations:rp_factCibSubscriptions" | search nsdHostname=$selectedId$ | join type=left productOfferingInstanceId [ inputlookup imsiByProductOfferingInstanceId.csv ] | fields imsi</query>
+      </search>
+      <fieldForValue>imsi</fieldForValue>
+      <fieldForLabel>imsi</fieldForLabel>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="selectedDid" depends="$fakeToken$">
+      <search>
+        <query>| loadjob savedsearch="okheggdal:IM-TA-Global-Configurations:rp_factCibSubscriptions" | search nsdHostname=$selectedId$ | fields gxTerminalDid</query>
+      </search>
+      <fieldForValue>gxTerminalDid</fieldForValue>
+      <fieldForLabel>gxTerminalDid</fieldForLabel>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="time" token="selectedTime" searchWhenChanged="true">
+      <label></label>
+      <default>
+        <earliest>-28h@h</earliest>
+        <latest>-4h@h</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <search base="planDetails">
+          <query>| fields subscriptionPlanName</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Subscription Plan</option>
+      </single>
+      <single>
+        <search base="planDetails">
+          <query>| fields mirDownlink</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Downstream MIR</option>
+      </single>
+      <single>
+        <search base="planDetails">
+          <query>| fields cirDownlink</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Downstream CIR</option>
+      </single>
+      <single>
+        <search base="planDetails">
+          <query>| fields mirUplink</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Upstream MIR</option>
+      </single>
+      <single>
+        <search base="planDetails">
+          <query>| fields cirUplink</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Upstream CIR</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Event Count - Sandvine</title>
+      <single>
+        <search>
+          <query>index=summary source=sandvineGxSummaryByDid SubscriberName=$selectedDid$
+| spath path=information.SubscriberName output=gxTerminalDid
+| spath path=information.TotalReceivedBytes output=TotalReceivedBytes
+| spath path=information.TotalTransmittedBytes output=TotalTransmittedBytes
+| stats count as eventcount</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Unique Application Protocols Detected - Sandvine</title>
+      <single>
+        <search>
+          <query>index=summary source=sandvineGxSummaryByDid SubscriberName=$selectedDid$
+| stats dc(ApplicationProtocolDisplayName) as ApplicationProtocolDisplayName</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Percentile Protocol Distribution - Sandvine</title>
+      <chart>
+        <search>
+          <query>index=summary source=sandvineGxSummaryByDid SubscriberName=$selectedDid$
+| eventstats count as applicationProtocolSum
+| stats count as appSum values(applicationProtocolSum) as applicationProtocolSum by ApplicationProtocolDisplayName
+| eval percentile = appSum/applicationProtocolSum*100
+| fields ApplicationProtocolDisplayName percentile</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Top 10 Protocols Percentile - Sandvine</title>
+      <chart>
+        <search>
+          <query>index=summary source=sandvineGxSummaryByDid SubscriberName=$selectedDid$
+| top 10 ApplicationProtocolDisplayName</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Summarized Data Usage in Mega Bytes Split by Direction - GX</title>
+      <chart>
+        <search>
+          <query>index=summary source=sandvineGxSummaryByDid SubscriberName=$selectedDid$
+| timechart span=15m sum(eval(sumTotalReceivedBytes/1000/1000)) as TotalReceivedMBytes sum(eval(sumTotalTransmittedBytes/1000/1000)) as TotalTransmittedMBytes</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Summarized Data Usage in Mega Bytes - GX</title>
+      <chart>
+        <search>
+          <query>index=summary source=sandvineGxSummaryByDid SubscriberName=$selectedDid$
+| timechart span=15m sum(eval(sumTotalBytes/1000/1000)) as totalMBytes</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Average Bandwidth Consumption Split by Direction - GX</title>
+      <chart>
+        <search>
+          <query>index=summary source=sandvineGxSummaryByDid SubscriberName=$selectedDid$
+| timechart span=15m avg(eval(sumTotalReceivedBytes*8/900/1000)) as TotalReceivedKBits avg(eval(sumTotalTransmittedBytes*8/900/1000)) as TotalTransmittedKBits</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Link Status over Time</title>
+      <chart>
+        <search>
+          <query>index=edge-wholesale-maritime sourcetype=assurance:modem host=$selectedId$
+| timechart span=15m count by SatelliteName</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Average Bandwidth Consumption Split by Direction and APN - BGAN</title>
+      <input type="dropdown" token="selectedApnSpeed">
+        <label></label>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <fieldForLabel>accessPointNameNI</fieldForLabel>
+        <fieldForValue>accessPointNameNI</fieldForValue>
+        <search>
+          <query>index=bgan sourcetype=csv source=/home/inmarsat/bgangx_cdr.csv host=localhost.localdomain servedIMSI=$selectedImsi$
+| stats latest(_time) by accessPointNameNI</query>
+          <earliest>-28h@h</earliest>
+          <latest>-4h@h</latest>
+        </search>
+      </input>
+      <chart>
+        <search>
+          <query>index=bgan sourcetype=csv source=/home/inmarsat/bgangx_cdr.csv host=localhost.localdomain servedIMSI=$selectedImsi$ accessPointNameNI=$selectedApnSpeed$
+| timechart span=5m avg(eval(lOTVUpVol*8/300/1000)) as transmittedKbps avg(eval(lOTVDownVol*8/300/1000)) as receivedKbps by accessPointNameNI</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Summarized Data Usage in Kilo Bytes - BGAN</title>
+      <input type="dropdown" token="selectedApnMass">
+        <label></label>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <fieldForLabel>accessPointNameNI</fieldForLabel>
+        <fieldForValue>accessPointNameNI</fieldForValue>
+        <search>
+          <query>index=bgan sourcetype=csv source=/home/inmarsat/bgangx_cdr.csv host=localhost.localdomain servedIMSI=$selectedImsi$
+| stats latest(_time) by accessPointNameNI</query>
+          <earliest>-28h@h</earliest>
+          <latest>-4h@h</latest>
+        </search>
+      </input>
+      <chart>
+        <search>
+          <query>index=bgan sourcetype=csv source=/home/inmarsat/bgangx_cdr.csv host=localhost.localdomain servedIMSI=$selectedImsi$ accessPointNameNI=$selectedApnMass$
+| timechart span=5m avg(eval(lOTVUpVol/1000)) as transmittedKBytes avg(eval(lOTVDownVol/1000)) as receivedKBytes by accessPointNameNI</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+</form>
