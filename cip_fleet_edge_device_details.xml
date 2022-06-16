@@ -1,0 +1,31 @@
+<form script="infobutton.js,tokenlinks.js" stylesheet="infobutton.css" theme="dark" hideFilters="true">
+  <label>Fleet Edge - Device Details</label>
+  <fieldset>
+    <input type="dropdown" token="cmId" depends="$fakeToken$">
+      <label>someLabel</label>
+      <search>
+        <query>| inputlookup nsdLookup.csv | search nsdId=$selectedId$ | head 1 | table cmId</query>
+      </search>
+      <fieldForLabel>cmId</fieldForLabel>
+      <fieldForValue>cmId</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="vesselName" depends="$fakeToken$">
+      <search>
+        <query>| inputlookup nsdLookup.csv | search nsdId=$selectedId$ | head 1 | table vesselName</query>
+      </search>
+      <fieldForValue>vesselName</fieldForValue>
+      <fieldForLabel>vesselName</fieldForLabel>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+  </fieldset>
+  <row>
+    <panel id="acuDeviceDetails" ref="acuDeviceDetails"></panel>
+  </row>
+  <row>
+    <panel id="bucDeviceDetails" ref="bucDeviceDetails"></panel>
+  </row>
+  <row>
+    <panel id="coreModuleDeviceDetails" ref="coreModuleDeviceDetails"></panel>
+  </row>
+</form>

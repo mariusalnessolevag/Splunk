@@ -1,0 +1,307 @@
+<form theme="dark">
+  <label>Fleet Xpress - Retail Voice Overview</label>
+  <search id="selectionSearch">
+    <query>
+        | inputlookup masterPulseCustomerAutoLookup
+        | search guid=$selectedGuid$
+        | lookup OMSCustomerAutoLookup guid OUTPUT xlVsatMgmtIp 
+        | fields customerId guid vesselName contractPartnerId modem_serial xlVsatMgmtIp
+      </query>
+    <earliest>-15m</earliest>
+    <latest>now</latest>
+  </search>
+  <search id="voiceTypeSearch">
+    <query>
+      index=product-and-equipment-retail sourcetype=tmsPhoneNumberSummaryLookup customerId=$selectedCustomerId$
+      | stats count by provider
+    </query>
+    <earliest>-6h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <fieldset submitButton="false">
+    <input type="time" token="selectedTime" searchWhenChanged="true">
+      <label></label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="selectedLoopbackIp" depends="$fakeToken$">
+      <label>selectedLoopbackIp</label>
+      <search>
+        <query>| inputlookup OMSCustomerAutoLookup
+                  | search guid=$selectedGuid$
+                  | fields nmsVoip</query>
+      </search>
+      <fieldForLabel>nmsVoip</fieldForLabel>
+      <fieldForValue>nmsVoip</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="selectedCustomerId" depends="$fakeToken$">
+      <label>selectedCustomerId</label>
+      <search>
+        <query>| inputlookup OMSCustomerAutoLookup
+                  | search guid=$selectedGuid$
+                  | fields customerId</query>
+      </search>
+      <fieldForLabel>customerId</fieldForLabel>
+      <fieldForValue>customerId</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="selectedCoreModuleId" depends="$fakeToken$">
+      <label>selectedCustomerId</label>
+      <search>
+        <query>| inputlookup masterPulseCustomerAutoLookup
+                  | search guid=$selectedGuid$
+                  | fields modem_serial</query>
+      </search>
+      <fieldForLabel>modem_serial</fieldForLabel>
+      <fieldForValue>modem_serial</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="selectedDid" depends="$fakeToken$">
+      <label>selectedCustomerId</label>
+      <search>
+        <query>| loadjob savedsearch="okheggdal:IM-TA-Global-Configurations:rp_factCibSubscriptions"
+                  | search gxTerminalObjectName=*$selectedCoreModuleId$
+                  | fields gxTerminalDid</query>
+      </search>
+      <fieldForLabel>gxTerminalDid</fieldForLabel>
+      <fieldForValue>gxTerminalDid</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="selectedProviderMeta" depends="$fakeToken$">
+      <label>selectedProviderMeta</label>
+      <search base="voiceTypeSearch">
+        <query>| search provider = Voxbone</query>
+      </search>
+      <fieldForLabel>provider</fieldForLabel>
+      <fieldForValue>provider</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="selectedNumber" depends="$fakeToken$">
+      <label>selectedNumber</label>
+      <search>
+        <query>index=product-and-equipment-retail sourcetype=tmsPhoneNumberSummaryLookup provider="Voxbone"  customerId=$selectedCustomerId$
+| eval pp = prefix + " " + phoneNumber, did = replace(pp, " ", "")
+| stats values(did) as dids
+| mvcombine dids
+| eval did = replace(dids, " ", " OR ")
+| fields did</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <fieldForLabel>did</fieldForLabel>
+      <fieldForValue>did</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <search base="selectionSearch">
+          <query>fields guid</query>
+        </search>
+        <option name="underLabel">GUID</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields customerId</query>
+        </search>
+        <option name="underLabel">Customer Number</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields vesselName</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Ship Name</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields xlVsatMgmtIp</query>
+        </search>
+        <option name="underLabel">Router IP</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>| eval cmId = "CX751." + modem_serial | fields cmId</query>
+        </search>
+        <option name="underLabel">Terminal Name</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>index=product-and-equipment-retail sourcetype=tmsPhoneNumberSummaryLookup customerId=$selectedCustomerId$
+| stats values(eval("+" + prefix + " " + phoneNumber + " (" + country + ", " + area + ")")) as "Assigned Numbers" by provider
+| rename provider as Provider</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row depends="$selectedProviderCucm$">
+    <panel>
+      <title>Calls Over Time by Direction</title>
+      <chart>
+        <search>
+          <query>index=cisco_cdr sourcetype=cucm_cdr origIpv4v6Addr=$selectedLoopbackIp$ OR destIpv4v6Addr=$selectedLoopbackIp$
+  | eval direction = if(origIpv4v6Addr="$selectedLoopbackIp$", "Outgoing", "Incoming")
+  | timechart count by direction</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Call Clearing Causes Over Time</title>
+      <chart>
+        <search>
+          <query>index=cisco_cdr sourcetype=cucm_cdr origIpv4v6Addr=$selectedLoopbackIp$ OR destIpv4v6Addr=$selectedLoopbackIp$
+  | lookup callClearingCodes.csv Code AS destCause_value OUTPUTNEW Description as destCauseDesc
+  | timechart count by destCauseDesc</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Cummulative Call Duration</title>
+      <single>
+        <title>Total Hours</title>
+        <search>
+          <query>index=cisco_cdr sourcetype=cucm_cdr origIpv4v6Addr=$selectedLoopbackIp$ OR destIpv4v6Addr=$selectedLoopbackIp$
+  | stats sum(duration) as seconds 
+  | eval Minutes=round(seconds/60) 
+  | eval Hours=round(Minutes/60) 
+  | fields Hours</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+      <single>
+        <title>Total Minutes</title>
+        <search>
+          <query>index=cisco_cdr sourcetype=cucm_cdr origIpv4v6Addr=$selectedLoopbackIp$ OR destIpv4v6Addr=$selectedLoopbackIp$
+  | stats sum(duration) as seconds 
+  | eval Minutes=round(seconds/60) 
+  | fields Minutes</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row depends="$selectedProviderCucm$">
+    <panel>
+      <title>Business Calls</title>
+      <input type="dropdown" token="selectedBusinessCalllDirection" searchWhenChanged="true">
+        <label></label>
+        <choice value="*">All</choice>
+        <choice value="Outgoing">Outgoing</choice>
+        <choice value="Incoming">Incoming</choice>
+        <default>*</default>
+      </input>
+      <table>
+        <search>
+          <query>index=cisco_cdr origIpv4v6Addr=$selectedLoopbackIp$ OR destIpv4v6Addr=$selectedLoopbackIp$ NOT finalCalledPartyNumber=99999998
+  | eval direction = if(origIpv4v6Addr="$selectedLoopbackIp$", "Outgoing", "Incoming")
+  | lookup callClearingCodes.csv Code AS origCause_value OUTPUTNEW Description as origCauseDesc
+  | lookup callClearingCodes.csv Code AS destCause_value OUTPUTNEW Description as destCauseDesc
+  | table _time, date_wday, origDeviceName, destDeviceName, duration, origCauseDesc, destCauseDesc, callingPartyNumber, originalCalledPartyNumber, origIpv4v6Addr, destIpv4v6Addr, direction
+  | search direction=$selectedBusinessCalllDirection$
+  | rename _time as Time, date_wday as Day, origDeviceName as "Originating Device Name", destDeviceName as "Destination Device Name", origCauseDesc as "Originating Clearing Cause", destCauseDesc as "Destination Clearing Cause", callingPartyNumber as "Calling Number", originalCalledPartyNumber as "Called Number", origIpv4v6Addr as "Originating IP Address", destIpv4v6Addr as "Destination IP Address", direction as Direction
+  | convert ctime(Time)</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row depends="$selectedProviderCucm$">
+    <panel>
+      <title>Crew Voice Services</title>
+      <table>
+        <search>
+          <query>index=cisco_cdr origIpv4v6Addr=$selectedLoopbackIp$ OR destIpv4v6Addr=$selectedLoopbackIp$ finalCalledPartyNumber=99999998
+  | eval direction = if(origIpv4v6Addr="$selectedLoopbackIp$", "Outgoing", "Incoming")
+  | lookup callClearingCodes.csv Code AS origCause_value OUTPUTNEW Description as origCauseDesc
+  | lookup callClearingCodes.csv Code AS destCause_value OUTPUTNEW Description as destCauseDesc
+  | table _time, date_wday, origDeviceName, destDeviceName, duration, origCauseDesc, destCauseDesc, callingPartyNumber, originalCalledPartyNumber, origIpv4v6Addr, destIpv4v6Addr, direction
+  | rename _time as Time, date_wday as Day, origDeviceName as "Originating Device Name", destDeviceName as "Destination Device Name", origCauseDesc as "Originating Clearing Cause", destCauseDesc as "Destination Clearing Cause", callingPartyNumber as "Calling Number", originalCalledPartyNumber as "Called Number", origIpv4v6Addr as "Originating IP Address", destIpv4v6Addr as "Destination IP Address", direction as Direction
+  | convert ctime(Time)</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row depends="$selectedProviderMeta$">
+    <panel>
+      <title>Business Calls</title>
+      <input type="dropdown" token="selectedBusinessCalllDirection" searchWhenChanged="true">
+        <label></label>
+        <choice value="*">All</choice>
+        <choice value="Outgoing">Outgoing</choice>
+        <choice value="Incoming">Incoming</choice>
+        <default>*</default>
+      </input>
+      <table>
+        <search>
+          <query>index=voice $selectedNumber$ NOT RoutingInfo_RequestedAddr_content=0099999999
+| eval DisconnectTime = DisconnectTime/1000, ConnectTime = ConnectTime/1000, duration = DisconnectTime-ConnectTime, connectTime=strftime(ConnectTime,"%m/%d/%y %H:%M:%S"), disconnectTime=strftime(DisconnectTime,"%m/%d/%y %H:%M:%S")
+| stats values(RoutingInfo_CallingPartyOrigAddr_content) as "Calling DID" values(RoutingInfo_DestAddr_content) as "Called DID" values(connectTime) as "Connect Time" values(disconnectTime) as "Disconnect Time" values(duration) as "Duration in Seconds" values(ReleaseReason_Internal) as "Release Reason" values(TermParty_TrunkGroup_trunkname) as "Trunk Name" by id
+| fields - id</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row depends="$selectedProviderMeta$">
+    <panel>
+      <title>Crew Service Calls</title>
+      <table>
+        <search>
+          <query>index=voice $selectedNumber$ RoutingInfo_RoutedAddr_content=12123789805 OR RoutingInfo_RoutedAddr_content=0099999999
+| eval DisconnectTime = DisconnectTime/1000, ConnectTime = ConnectTime/1000, duration = DisconnectTime-ConnectTime, connectTime=strftime(ConnectTime,"%m/%d/%y %H:%M:%S"), disconnectTime=strftime(DisconnectTime,"%m/%d/%y %H:%M:%S")
+| stats values(RoutingInfo_CallingPartyOrigAddr_content) as "Calling DID" values(RoutingInfo_DestAddr_content) as "Called DID" values(connectTime) as "Connect Time" values(disconnectTime) as "Disconnect Time" values(duration) as "Duration in Seconds" values(ReleaseReason_Internal) as "Release Reason" values(TermParty_TrunkGroup_trunkname) as "Trunk Name" by id
+| fields - id</query>
+          <earliest>$selectedTime.earliest$</earliest>
+          <latest>$selectedTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

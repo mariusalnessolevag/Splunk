@@ -1,0 +1,157 @@
+<form theme="dark">
+	<label>Fleet Edge - Vessel Overview</label>
+	<row>
+		<panel>
+			<input type="time" token="selectedServiceStatusTime">
+			<label></label>
+			<default>
+				<earliest>-24h@h</earliest>
+				<latest>now</latest>
+			</default>
+			</input>
+			<title>Service Status over Time</title>
+			<chart>
+				<title>Uptime</title>
+				<search id="cipfleet_edge_extension__uptime">
+					<query>
+						index=perfdata variables.nsdid=$selectedId$
+						| eval u = if(problem == "false", "100", "0")
+						| timechart span=15m avg(u) as uptime
+					</query>
+					<earliest>$selectedServiceStatusTime.earliest$</earliest>
+					<latest>$selectedServiceStatusTime.latest$</latest>
+				</search>
+				<option name="charting.chart">line</option>
+				<option name="charting.drilldown">none</option>
+				<option name="refresh.display">progressbar</option>
+			</chart>
+			<chart>
+				<title>Latency</title>
+				<search id="cipfleet_edge_extension__latency">
+					<query>
+						index=perfdata variables.nsdid=$selectedId$
+						| timechart span=15m avg(latency) as latency
+					</query>
+					<earliest>$selectedServiceStatusTime.earliest$</earliest>
+					<latest>$selectedServiceStatusTime.latest$</latest>
+				</search>
+				<option name="charting.chart">line</option>
+				<option name="charting.drilldown">none</option>
+				<option name="refresh.display">progressbar</option>
+			</chart>
+			<chart>
+				<title>Packet Loss</title>
+				<search id="cipfleet_edge_extension__packet_loss">
+					<query>
+						index=perfdata variables.nsdid=$selectedId$
+						| timechart span=15m avg(packet_loss) as packet_loss
+					</query>
+					<earliest>$selectedServiceStatusTime.earliest$</earliest>
+					<latest>$selectedServiceStatusTime.latest$</latest>
+				</search>
+				<option name="charting.chart">line</option>
+				<option name="charting.drilldown">none</option>
+				<option name="refresh.display">progressbar</option>
+			</chart>
+		</panel>
+		<panel>
+			<input type="time" token="selectedLinkStatusTime">
+			<label></label>
+			<default>
+				<earliest>-24h@m</earliest>
+				<latest>now</latest>
+			</default>
+			</input>
+			<title>Link Status over Time</title>
+			<chart>
+				<title>GX Timeline</title>
+				<search id="cipfleet_edge_extension__gx_timeline">
+					<query>
+						index=edge-wholesale-maritime sourcetype=assurance:modem host=$selectedId$
+						| eval sat = SatelliteName + " - " + BeamNumber
+						| timechart span=15m count by sat
+					</query>
+					<earliest>$selectedLinkStatusTime.earliest$</earliest>
+					<latest>$selectedLinkStatusTime.latest$</latest>
+				</search>
+				<option name="charting.chart">line</option>
+				<option name="charting.drilldown">none</option>
+				<option name="refresh.display">progressbar</option>
+			</chart>
+			<table>
+				<title>SVN State Changes</title>
+				<search id="cipfleet_edge_extension__svn_state_changes">
+					<query>
+						index=edge-wholesale-maritime sourcetype=syslog:svn_checker host=$selectedId$
+						| stats count sparkline as trendline by svn svn_status
+						| eval time_spent_minutes = count, time_spent_hours = count/60
+						| fields - count
+						| sort svn_status
+					</query>
+					<earliest>$selectedLinkStatusTime.earliest$</earliest>
+					<latest>$selectedLinkStatusTime.latest$</latest>
+				</search>
+				<drilldown>
+					<set token="selectedSvn">$row.svn$</set>
+				</drilldown>
+			</table>
+			<chart depends="$selectedSvn$">
+				<title>Changes over time for $selectedSvn$</title>
+				<search id="cipfleet_edge_extension__svn_state_changes_over_time">
+					<query>
+						index=edge-wholesale-maritime sourcetype=syslog:svn_checker host=$selectedId$
+						svn=$selectedSvn$
+						| timechart span=15m count by svn_status
+					</query>
+					<earliest>$selectedLinkStatusTime.earliest$</earliest>
+					<latest>$selectedLinkStatusTime.latest$</latest>
+				</search>
+				<option name="charting.chart">line</option>
+				<option name="charting.drilldown">none</option>
+				<option name="refresh.display">progressbar</option>
+				<drilldown>
+					<unset token="selectedSvn"></unset>
+				</drilldown>
+			</chart>
+		</panel>
+	</row>
+	<row>
+		<panel>
+			<title>VSAT Tracking Details</title>
+			<input type="time" token="selectedVsatTracking" searchWhenChanged="true">
+			<label></label>
+			<default>
+				<earliest>-24h@h</earliest>
+				<latest>now</latest>
+			</default>
+			</input>
+			<input type="multiselect" token="selectedAcuValue" searchWhenChanged="true">
+				<label></label>
+				<choice value="first(Azimuth) as AZ">Azimuth</choice>
+				<choice value="first(Elevation) as EL">Elevation</choice>
+				<choice value="first(Heading) as HDG">Heading</choice>
+				<choice value="first(Relative) as REL">Relative Azimuth</choice>
+				<choice value="avg(trackingState) as Tracking">Tracking</choice>
+				<initialValue>Tracking</initialValue>
+				<delimiter> </delimiter>
+			</input>
+			<chart>
+				<search id="cipfleet_edge_extension__tracking_details">
+					<query>
+						index=edge-wholesale-maritime sourcetype=assurance:acu host=$selectedId$
+						| eval trackingState = if(Tracking == "true", "100", "0")
+						| timechart span=5m $selectedAcuValue$ by sourcetype
+					</query>
+					<earliest>$selectedVsatTracking.earliest$</earliest>
+					<latest>$selectedVsatTracking.latest$</latest>
+				</search>
+				<option name="charting.chart">line</option>
+				<option name="charting.legend.placement">bottom</option>
+				<option name="charting.legend.labelStyle.overflowMode">ellipsisNone</option>
+			</chart>
+		</panel>
+	</row>
+	<row>
+	  <panel ref="inmarsat_cip_fleet_edge_blockage_detector" />
+	</row>
+</form>

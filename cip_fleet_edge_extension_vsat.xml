@@ -1,0 +1,184 @@
+<form theme="dark">
+  <label>Fleet Edge - Vsat Overview</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="selectedDid" searchWhenChanged="true" depends="$hiddenBoi$">
+      <label></label>
+      <fieldForLabel>gxTerminalDid</fieldForLabel>
+      <fieldForValue>gxTerminalDid</fieldForValue>
+      <search id="cip_fleet_edge_extension_vsat__dropdown">
+        <query>
+          | inputlookup sdpCustomerAutoLookup.csv 
+          | search nsdHostname=$selectedId$
+          | eval cmId=split(gxTerminalObjectName, "-"), cmId=mvindex(cmId, 2)
+        </query>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </search>
+      <selectFirstChoice>true</selectFirstChoice>
+      <change>
+        <set token="selectedCmId">$row.cmId$</set>
+      </change>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>System Details and Location</title>
+      <input type="time" token="selectedSystemDetailsTime">
+        <label></label>
+        <default>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <table>
+        <search id="cip_fleet_edge_extension_vsat__system_details">
+          <query>
+            index=edge-wholesale-maritime sourcetype=assurance:modem host=$selectedId$
+            | stats latest(LatCoordPoint) as Latitude latest(LongCoordPoint) as Longitude latest(SatelliteName) as Region latest(BeamNumber) as Beam latest(ModemSWVersion) as ModemSWVersion latest(ModemSerialNumber) as ModemSerialNumber latest(ModemTemperatureDisplay) as ModemTemperatureDisplaylatest latest(NETParameter) as NETParameter latest(RXSNR) as RXSNR latest(RXFreq) as RXFreq latest(TXParameter) as TXParameter latest(TXPower) as TXPower latest(UTCTime) as EdgeTime 
+            | transpose 
+            | rename column as Field "row 1" as Value
+          </query>
+          <earliest>$selectedSystemDetailsTime.earliest$</earliest>
+          <latest>$selectedSystemDetailsTime.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>SVN Status over Time</title>
+      <input type="time" token="selectedSvnTime">
+        <label></label>
+        <default>
+          <earliest>-24h@m</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <table>
+        <search id="cip_fleet_edge_extension_vsat__svn_status">
+          <query>
+            index=gx-network-data sourcetype=terminal_bgp host=CX751.$selectedCmId$
+            | chart latest(status) as Status sparkline as Sparkline by svn region
+            | eval bgpState = if(Status == "Act", "Active", if(status == "Conn", "Connecting", "Established"))
+            | rename svn as SVN region as Region bgpState as "BGP State"
+            | fields - status
+          </query>
+          <earliest>$selectedSvnTime.earliest$</earliest>
+          <latest>$selectedSvnTime.latest$</latest>
+        </search>
+          <option name="drilldown">cell</option>
+        <drilldown>
+          <set token="selectedSvn">$row.SVN$</set>
+        </drilldown>
+      </table>
+      <chart depends="$selectedSvn$">
+        <search id="cip_fleet_edge_extension_vsat__svn_status_drilldown">
+          <query>
+            index=gx-network-data sourcetype=terminal_bgp host=CX751.$selectedCmId$ svn=$selectedSvn$
+            | timechart count by status
+          </query>
+          <earliest>$selectedSvnTime.earliest$</earliest>
+          <latest>$selectedSvnTime.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>GX Timeline</title>
+      <input type="time" token="selectedGxTimelineTime">
+        <label></label>
+        <default>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <chart>
+        <search id="cip_fleet_edge_extension_vsat__gx_timeline">
+          <query>
+            index=gx-network-data sourcetype=terminal_status_table terminal_name=CX751.$selectedCmId$ terminal_status=*IN_NETWORK*
+            | eval sat = terminal_region + " _ " + terminal_beam
+            | timechart span=5m count by sat
+          </query>
+          <earliest>$selectedGxTimelineTime.earliest$</earliest>
+          <latest>$selectedGxTimelineTime.latest$</latest>
+        </search>
+        <option name="charting.chart">area</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+  <panel>
+    <title>VSAT Tracking Details</title>
+    <input type="time" token="selectedVsatTracking" searchWhenChanged="true">
+      <label></label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="multiselect" token="selectedAcuValue" searchWhenChanged="true">
+      <label></label>
+      <choice value="first(Azimuth) as AZ">Azimuth</choice>
+      <choice value="first(Elevation) as EL">Elevation</choice>
+      <choice value="first(Heading) as HDG">Heading</choice>
+      <choice value="first(Relative) as REL">Relative Azimuth</choice>
+      <choice value="avg(trackingState) as Tracking">Tracking</choice>
+      <initialValue>Tracking</initialValue>
+      <delimiter> </delimiter>
+    </input>
+    <chart>
+      <search id="cip_fleet_edge_extension_vsat__vsat_tracking">
+        <query>
+          index=edge-wholesale-maritime sourcetype=assurance:acu host=$selectedId$
+          | eval trackingState = if(Tracking == "true", "100", "0")
+          | timechart span=5m $selectedAcuValue$ by sourcetype
+        </query>
+        <earliest>$selectedVsatTracking.earliest$</earliest>
+        <latest>$selectedVsatTracking.latest$</latest>
+      </search>
+      <option name="charting.chart">line</option>
+      <option name="charting.legend.placement">bottom</option>
+      <option name="charting.legend.labelStyle.overflowMode">ellipsisNone</option>
+    </chart>
+  </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="time" token="selectedDataTime">
+        <label></label>
+        <default>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <chart>
+        <title>GX Speed over Time</title>
+        <search id="cip_fleet_edge_extension_vsat__gx_speed_over_time">
+          <query>
+            index=gx-network-data sourcetype=sspc_stats_stream host=$selectedDid$
+            | eval us = 'SSPC Total Upstream Usage'*8/300/1024, ds = 'SSPC Total Downstream Usage'*8/300/1024
+            | timechart span=5m avg(us) as Upstream avg(ds) as Downstream by sspc_svn
+          </query>
+          <earliest>$selectedDataTime.earliest$</earliest>
+          <latest>$selectedDataTime.latest$</latest>
+        </search>
+        <option name="charting.chart">area</option>
+      </chart>
+      <table>
+        <title>GX Throughput Since $selectedDataTime.earliest$</title>
+        <search id="cip_fleet_edge_extension_vsat__gx_throughput">
+          <query>
+            index=gx-network-data sourcetype=sspc_stats_stream host=$selectedDid$
+            | eval us = 'SSPC Total Upstream Usage'/1024/1024/1024, ds = 'SSPC Total Downstream Usage'/1024/1024/1024
+            | stats sum(us) as Upstream(GigaByte) sum(ds) as Downstream(GigaByte) by sspc_svn
+            | rename sspc_svn as SVN
+            | fields SVN, Downstream(GigaByte), Upstream(GigaByte)
+          </query>
+          <earliest>$selectedDataTime.earliest$</earliest>
+          <latest>$selectedDataTime.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+</form>

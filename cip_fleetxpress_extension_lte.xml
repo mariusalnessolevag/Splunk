@@ -1,0 +1,609 @@
+<form theme="dark">
+  <label>Fleet Xpress - Retail LTE Overview</label>
+  <search id="cipLTEbase">
+    <query>| inputlookup OMSCustomerAutoLookup 
+| search  guid=$guid$
+| table customerId hostGuid
+| join type=left customerId
+    [search index=product-and-equipment-retail sourcetype=masterPulseFxBandwidthLookup
+        | eval priority=if(searchmatch("Priority A"),1,0)
+    | stats values(LTEFXPackage) as lteFxPackage values(LtePackage) as ltePackage values(LTEPackageArea) as LTEPackageArea values(LTEPackagePlanDetails) as LTEPackagePlanDetails values(priority) as priority by customerId]
+| table lteFxPackage ltePackage LTEPackagePlanDetails LTEPackageArea hostGuid priority
+| rename hostGuid as host
+| join type=left host
+    [search index=gx-engineering  sourcetype="g5:LTE-router" accessPointName1="im*" OR accessPointName2="im*"
+    | eval apn=if(searchmatch("imWf*"),1,0)
+| stats values(accessPointName1) as accessPointName1 values(accessPointName2) as accessPointName2  values(apn) as apn by host]
+| eval match=if(priority==apn, "Match", "Mismatch")
+| table ltePackage LTEPackagePlanDetails LTEPackageArea host accessPointName1 accessPointName2 match</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <fieldset submitButton="false" autoRun="false">
+    <input type="time" token="field1">
+      <label>Date Field 1</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="time" token="field2">
+      <label>Date Field 2</label>
+      <default>
+        <earliest>@mon</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="guid" searchWhenChanged="true">
+      <label>Input an ID or Vessel Name</label>
+      <search id="cipLteDropdown">
+        <query>index=gx-engineering sourcetype="g5:LTE-router"
+| stats latest(_time) by host
+| eval guid = replace(host, "GUID", "")
+| lookup masterPulseCustomerAutoLookup.csv guid OUTPUT modem_serial as fxGUID vesselName customerId
+| eval newName=vesselName + "," + customerId</query>
+        <earliest>-7d@h</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <set token="vesselName">$row.vesselName$</set>
+        <set token="routerIp">$row.xlVsatMgmtIp$</set>
+        <set token="modemIp">$row.xlVsatMgmtGateway$</set>
+        <set token="g5Ip">$row.xlG5Ip$</set>
+        <set token="acuOneIp">$row.xlAcuoneIp$</set>
+        <set token="pduIp">$row.xlPduIp$</set>
+        <set token="latitude">$row.latitude$</set>
+        <set token="longitude">$row.longitude$</set>
+        <set token="host">$row.host$</set>
+        <set token="IMO">$row.IMO$</set>
+        <set token="customerId">$row.customerID$</set>
+        <set token="cucumKey">$row.cucumKey$</set>
+        <set token="fxGUID">$row.fxGUID$</set>
+      </change>
+      <fieldForLabel>newName</fieldForLabel>
+      <fieldForValue>guid</fieldForValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Current Active Link</title>
+        <search>
+          <query>index=gx-engineering host=GUID$guid$ sourcetype="g5:software" OR sourcetype="g5:LTE-router" LinkType=* OR lteStatus=*
+| transaction maxspan=4m 
+| search lteStatus=* AND LinkType=*
+| eval newLinkType=if(LinkType="VSAT","VSAT","FBB"), activeLink=if(lteStatus="1" , "LTE", newLinkType) 
+| stats latest(activeLink) as activeLink</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Current LTE Zone Coverage</title>
+        <search id="cipLteZone">
+          <query>index=summary  source=nagiosVlan50ModemJsonAvailability15m guid=$guid$
+| stats latest(latitude) as latitude latest(longitude) as longitude first(guid) as guid by customerId 
+| lookup gomLteLookup latitude longitude 
+| append
+    [search index=summary  source=nagiosVlan50ModemJsonAvailability15m guid=$guid$
+| stats latest(latitude) as latitude latest(longitude) as longitude first(guid) as guid by customerId 
+| lookup northSeaLteLookup latitude longitude]
+| rename featureId as zone
+| stats count(zone) as p
+| eval m=if(p&gt;0,"Inside Coverage","Outside Coverage")
+| table m</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>LTE BW Package</title>
+        <search base="cipLTEbase">
+          <query>| fillnull ltePackage value="LTE Package not activated"
+| table ltePackage</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>LTE Package Area</title>
+        <search base="cipLTEbase">
+          <query>
+            | table LTEPackageArea
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">106</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Time spent on LTE</title>
+        <search id="cipLteTimeSpent">
+          <query>index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$ | search lteStatus=* OR lte1101Status=*
+| stats count(eval(lteStatus="1" OR lteStatus="up" OR lte1101Status="available" )) as available count as total | eval onLte=round(available/total*100,2) | fields onLte</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">%</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total LTE Data Volume</title>
+        <search id="cipLteTotalData">
+          <query>index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$ 
+| stats sum(inputBytes) as rxData sum(outputBytes) as txData| eval downloadGB=(rxData/1024/1024/1024), uploadGB=(txData/1024/1024/1024), totalGB=(downloadGB+uploadGB) 
+| fields _time totalGB</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">112</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">GB</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>LTE APN And Bandwidth Priority Match</title>
+        <search base="cipLTEbase">
+          <query>| table match
+| eval range=if(match=="Match", "low", "severe")</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">147</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <html>
+        <font size="1">
+        <h1>Reason for mismatch</h1>
+        <p>The APN profile for the LTE simcard is not matching the BW Profile priority in Pulse</p>
+        <p/>
+        <p> </p>
+       <h1>Resolution</h1>
+        <p>Check Pulse to confirm that LTE BW Package, Profile and Priority is correct/activated</p>
+        <p>Check customer LTE router to confirm that APN is correct according to Pulse</p>
+        <p>If above is correct, call Tampnet and change the APN on the SIM card to reflect Pulse</p>
+        <p> </p>
+        </font>
+      </html>
+    </panel>
+    <panel>
+      <single>
+        <title>LTE  BW Package And homePOP match</title>
+        <search id="lteBWpopMatch">
+          <query>| inputlookup OMSCustomerAutoLookup 
+| search  guid=$guid$
+| table customerId hostGuid popId
+| join type=left customerId
+    [search index=product-and-equipment-retail sourcetype=masterPulseFxBandwidthLookup
+        | eval priority=if(searchmatch("Priority A"),1,0)
+    | stats values(LTEFXPackage) as lteFxPackage values(LtePackage) as ltePackage values(LTEPackageArea) as LTEPackageArea values(LTEPackagePlanDetails) as LTEPackagePlanDetails values(priority) as priority by customerId]
+| table lteFxPackage ltePackage LTEPackagePlanDetails LTEPackageArea hostGuid priority popId
+| rename hostGuid as host
+| join type=left host
+    [search index=gx-engineering  sourcetype="g5:LTE-router" accessPointName1="im*" OR accessPointName2="im*"
+    | eval apn=if(searchmatch("imWf*"),1,0)
+| stats values(accessPointName1) as accessPointName1 values(accessPointName2) as accessPointName2  values(apn) as apn by host]
+| eval match=if(priority==apn, "Match", "Mismatch")
+| table ltePackage LTEPackagePlanDetails LTEPackageArea host accessPointName1 accessPointName2 match popId |  table LTEPackageArea popId
+| eval popMatch=if(popId=="AMS",1,0)
+| eval packMatch=if(LTEPackageArea=="Europe",0,1)
+| eval penisMatch=popMatch+packMatch
+| eval popAndPackMatch=if(penisMatch=1,"Match","Mismatch")
+| table popAndPackMatch
+| eval range=if(popAndPackMatch=="Match", "low", "severe")</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">147</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>LTE Modem Connectivity</title>
+        <search id="cipLteModemConnect">
+          <query>index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$
+| stats count(_raw) as p
+| eval m=if(p&gt;0,"OK","Not OK")
+| table m
+| eval range=if(m=="OK", "low", "severe")</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">147</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <html>
+        <font size="1">
+        <h1>Reason for no connectivity on LTE Modem</h1>
+        <p>Splunk is not receiving any data from the LTE modem</p>
+        <p/>
+        <p> </p>
+       <h1>Resolution</h1>
+        <p>Log on to the LTE modem and check if accessible</p>
+        <p>If you don't have access, check if the modem is powered on</p>
+        <p>If you have access, check that NXLog is configured and running</p>
+        <p> </p>
+        </font>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>LTE Datausage</title>
+        <search id="cipLteDataUsage">
+          <query>index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$ | search "CELLULAR_1/*" OR "CELLULAR_0/1/0" OR  "LTE_1101_TRAFFIC*" OR "LTE_829_TRAFFIC*" | eval 2UpBytes=if(outputBytes&gt;0,outputBytes,lteTrafficUpBytes) , 2DownBytes=if(inputBytes&gt;0,inputBytes,lteTrafficDownBytes)
+| timechart bins=1000 avg(2DownBytes) as rxData avg(2UpBytes) as txData
+| eval downloadMB=(rxData/1024/1024), uploadMB=(txData/1024/1024), totalMB=(downloadMB+uploadMB) 
+| fields _time downloadMB uploadMB totalMB</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+      <chart>
+        <title>LTE active vs Zone</title>
+        <search id="cipLteZone2">
+          <query>index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$ | search lteStatus=* OR lte1101Status=*
+| timechart span=15m count(eval(lteStatus="1" OR lteStatus="up" OR lte1101Status="available" )) as available count as total | eval onLte=round(available/total,2) | fields _time onLte
+| append [search index=summary source=FleetLTE15m guid=$guid$
+| timechart span=15m count(zone) as inLTEcoverage]</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.annotation.categoryColors">{"LTE Signal within threshold":"#61cafa","LTE Signal below threshold":"#fae75f"}</option>
+        <option name="charting.axisLabelsY.majorUnit">1</option>
+        <option name="charting.axisLabelsY2.majorUnit">1</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.axisY2.maximumNumber">2</option>
+        <option name="charting.axisY2.minimumNumber">0</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.overlayFields">lteActive</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <h1>How to read the above graphs</h1>
+        <p>A LTE modem can be inside coverage without being online on LTE. It is the LTE cellular modem signal that decides if the link switches to LTE or not. If the signal is better than -18 and the RSRP is better than -108 then the Link will switch to LTE</p>
+        <p>Look at the graph below to view signal strength and RSRP</p>
+        <p/>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Signal Quality</title>
+        <search id="cipLteSNR">
+          <query>index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$ | eval thrsSNR=-3, thrsRSRQ=-18, thrsRSRP=-108 | rename snr as SNR, rsrq as RSRQ, rsrp as RSRP  | timechart bins=1000 avg(SNR) as lteSNR avg(thrsSNR) as thrsSNR avg(RSRQ) as lteRSRQ avg(thrsRSRQ) as thrsRSRQ  avg(RSRP) as lteRSRP  avg(thrsRSRP) as thrsRSRP
+| append [search index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$ | search lteStatus=* OR lte1101Status=*
+| timechart bins=1000 count(eval(lteStatus="1" OR lteStatus="up" OR lte1101Status="available" )) as available count as total | eval onLte=round(available/total*100,2) | fields _time onLte]</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsY2.majorUnit">10</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisY.maximumNumber">100</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.axisY2.maximumNumber">30</option>
+        <option name="charting.axisY2.minimumNumber">-130</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.overlayFields">lteSNR,lteRSRP,lteRSSI,lteRSRQ,thrsRSRQ,thrsSNR,thrsRSRP</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Link vs jFlow Traffic, LTE=3 GX=2 FBB=1</title>
+        <search id="cipLteJFLOW">
+          <query>index=inmarsat_netflow_retail_prod_summary ingress_vlan=* hostGuid=GUID$guid$ | timechart span=5m sum(bytes) as bytes by direction | eval downloadKbps=(((inbound*8)/300)/1000), uploadKbps=(((outbound*8)/300)/1000) | fields - inbound outbound
+| join type=left _time  [search index=gx-engineering  host=GUID$guid$ sourcetype="g5:software" OR sourcetype="g5:LTE-router" LinkType=* OR lteStatus=*
+| transaction maxspan=4m 
+| search lteStatus=* AND LinkType=*
+| eval newLinkType=if(LinkType="VSAT","2","1"), activeLink=if(lteStatus="1" , "3", newLinkType) 
+| timechart span=5m first(activeLink) as activeLink]</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsY.majorUnit">1</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisY.maximumNumber">3</option>
+        <option name="charting.axisY.minimumNumber">1</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.overlayFields">downloadKbps,uploadKbps</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Latency (ms) $field1.earliest$-$field1.latest$</title>
+        <search id="cipLteLatency">
+          <query>index=nagios  guid=2011335  | timechart bins=1000 avg(vlan10.rta) as gxLatency
+| appendcols [search index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$ | timechart bins=1000 avg(rttAverage) as lteNewLatency avg(lte829Rtt) as lte829RTT 
+| eval lteLatency=if(lteNewLatency&gt;1,lteNewLatency,lte829RTT) | fields - lte829RTT lteNewLatnecy]
+| appendcols [search index=gx-engineering  sourcetype="g5:LTE-router" host=GUID$guid$ | search lteStatus=*  | eval lteActive=if(lteStatus="1" OR lteStatus="up" OR lte1101Status="available","1","0")
+| timechart bins=1000 avg(lteActive) as lteActive] | eval serviceLatency=if(lteActive=1,lteLatency,gxLatency) | fields _time serviceLatency</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsY2.majorUnit">50</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.maximumNumber">1000</option>
+        <option name="charting.axisY2.minimumNumber">0</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <viz type="leaflet_maps_app.maps-plus">
+        <title>GPS LTE coverage $field1.earliest$-$field1.latest$</title>
+        <search id="cipLteLTEHeatmap">
+          <query>(index="gx-engineering" sourcetype="g5:LTE-router" GUID=$guid$ OR host=GUID$guid$ ) OR (index="gx-network-data" sourcetype=terminal_status_table terminal_name="CX751.$fxGUID$")   | transaction maxspan=6m | search lteStatus="1" OR lteStatus="up" OR lte1101Status="available" terminal_lon=* | geostats binspanlat=22.5 binspanlong=45 latfield=terminal_lat longfield=terminal_lon  count by lteStatus globallimit=1000 
+| search latitude!="0.00000" AND longitude!="0.00000"</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="leaflet_maps_app.maps-plus.allPopups">0</option>
+        <option name="leaflet_maps_app.maps-plus.animate">0</option>
+        <option name="leaflet_maps_app.maps-plus.autoFitAndZoom">1</option>
+        <option name="leaflet_maps_app.maps-plus.autoFitAndZoomDelay">500</option>
+        <option name="leaflet_maps_app.maps-plus.bingMaps">0</option>
+        <option name="leaflet_maps_app.maps-plus.bingMapsLabelLanguage">en-US</option>
+        <option name="leaflet_maps_app.maps-plus.bingMapsTileLayer">CanvasLight</option>
+        <option name="leaflet_maps_app.maps-plus.cluster">0</option>
+        <option name="leaflet_maps_app.maps-plus.contextMenu">1</option>
+        <option name="leaflet_maps_app.maps-plus.criticalThreshold">80</option>
+        <option name="leaflet_maps_app.maps-plus.defaultHeight">600</option>
+        <option name="leaflet_maps_app.maps-plus.disableClusteringAtZoom">0</option>
+        <option name="leaflet_maps_app.maps-plus.drilldown">0</option>
+        <option name="leaflet_maps_app.maps-plus.drilldownAction">dblclick</option>
+        <option name="leaflet_maps_app.maps-plus.fullScreen">0</option>
+        <option name="leaflet_maps_app.maps-plus.googlePlacesPosition">topleft</option>
+        <option name="leaflet_maps_app.maps-plus.googlePlacesSearch">0</option>
+        <option name="leaflet_maps_app.maps-plus.googlePlacesZoomLevel">12</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapBlur">5</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapColorGradient">{"0.4":"blue","0.6":"cyan","0.7":"lime","0.8":"yellow","1":"red"}</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapEnable">1</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapMinOpacity">1.0</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapOnly">1</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapRadius">10</option>
+        <option name="leaflet_maps_app.maps-plus.i18nLanguage">en</option>
+        <option name="leaflet_maps_app.maps-plus.kmlOverlay">northSeaLteMap.kml</option>
+        <option name="leaflet_maps_app.maps-plus.layerControl">1</option>
+        <option name="leaflet_maps_app.maps-plus.layerControlCollapsed">1</option>
+        <option name="leaflet_maps_app.maps-plus.mapCenterLat">39.50</option>
+        <option name="leaflet_maps_app.maps-plus.mapCenterLon">-98.35</option>
+        <option name="leaflet_maps_app.maps-plus.mapCenterZoom">6</option>
+        <option name="leaflet_maps_app.maps-plus.mapTile">http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png</option>
+        <option name="leaflet_maps_app.maps-plus.maxClusterRadius">1</option>
+        <option name="leaflet_maps_app.maps-plus.maxSpiderfySize">100</option>
+        <option name="leaflet_maps_app.maps-plus.maxZoom">19</option>
+        <option name="leaflet_maps_app.maps-plus.measureActiveColor">#00ff00</option>
+        <option name="leaflet_maps_app.maps-plus.measureCompletedColor">#0066ff</option>
+        <option name="leaflet_maps_app.maps-plus.measureIconPosition">topright</option>
+        <option name="leaflet_maps_app.maps-plus.measureLocalization">en</option>
+        <option name="leaflet_maps_app.maps-plus.measurePrimaryAreaUnit">acres</option>
+        <option name="leaflet_maps_app.maps-plus.measurePrimaryLengthUnit">kilometers</option>
+        <option name="leaflet_maps_app.maps-plus.measureSecondaryAreaUnit">sqmiles</option>
+        <option name="leaflet_maps_app.maps-plus.measureSecondaryLengthUnit">miles</option>
+        <option name="leaflet_maps_app.maps-plus.measureTool">1</option>
+        <option name="leaflet_maps_app.maps-plus.minZoom">1</option>
+        <option name="leaflet_maps_app.maps-plus.multiplePopups">0</option>
+        <option name="leaflet_maps_app.maps-plus.pathColorList">#0003F0,#D43C29,darkgreen,0xe2d400,darkred,#23A378</option>
+        <option name="leaflet_maps_app.maps-plus.pathSplitInterval">60</option>
+        <option name="leaflet_maps_app.maps-plus.pathSplits">1</option>
+        <option name="leaflet_maps_app.maps-plus.permanentTooltip">0</option>
+        <option name="leaflet_maps_app.maps-plus.playbackSpeed">100</option>
+        <option name="leaflet_maps_app.maps-plus.playbackTickLength">50</option>
+        <option name="leaflet_maps_app.maps-plus.rangeOneBgColor">#B5E28C</option>
+        <option name="leaflet_maps_app.maps-plus.rangeOneFgColor">#6ECC39</option>
+        <option name="leaflet_maps_app.maps-plus.rangeThreeBgColor">#FD9C73</option>
+        <option name="leaflet_maps_app.maps-plus.rangeThreeFgColor">#F18017</option>
+        <option name="leaflet_maps_app.maps-plus.rangeTwoBgColor">#F1D357</option>
+        <option name="leaflet_maps_app.maps-plus.rangeTwoFgColor">#F0C20C</option>
+        <option name="leaflet_maps_app.maps-plus.refreshInterval">0</option>
+        <option name="leaflet_maps_app.maps-plus.renderer">svg</option>
+        <option name="leaflet_maps_app.maps-plus.scrollWheelZoom">1</option>
+        <option name="leaflet_maps_app.maps-plus.showPathLines">0</option>
+        <option name="leaflet_maps_app.maps-plus.showPlayback">0</option>
+        <option name="leaflet_maps_app.maps-plus.showPlaybackDateControl">1</option>
+        <option name="leaflet_maps_app.maps-plus.showPlaybackPlayControl">1</option>
+        <option name="leaflet_maps_app.maps-plus.showPlaybackSliderControl">1</option>
+        <option name="leaflet_maps_app.maps-plus.showProgress">1</option>
+        <option name="leaflet_maps_app.maps-plus.singleMarkerMode">0</option>
+        <option name="leaflet_maps_app.maps-plus.spiderfyDistanceMultiplier">1</option>
+        <option name="leaflet_maps_app.maps-plus.splunkVersionCheck">1</option>
+        <option name="leaflet_maps_app.maps-plus.stickyTooltip">1</option>
+        <option name="leaflet_maps_app.maps-plus.warningThreshold">55</option>
+        <option name="refresh.display">progressbar</option>
+      </viz>
+    </panel>
+    <panel>
+      <viz type="leaflet_maps_app.maps-plus">
+        <title>GPS overall service $field1.earliest$-$field1.latest$</title>
+        <search id="cipLteOverallGPSmap">
+          <query>index="gx-network-data" sourcetype=terminal_status_table terminal_name="CX751.$fxGUID$"  
+| geostats binspanlat=22.5 binspanlong=45 latfield=terminal_lat longfield=terminal_lon  count  globallimit=500
+| search latitude!="0.00000" AND longitude!="0.00000"</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="leaflet_maps_app.maps-plus.allPopups">0</option>
+        <option name="leaflet_maps_app.maps-plus.animate">0</option>
+        <option name="leaflet_maps_app.maps-plus.autoFitAndZoom">1</option>
+        <option name="leaflet_maps_app.maps-plus.autoFitAndZoomDelay">500</option>
+        <option name="leaflet_maps_app.maps-plus.bingMaps">0</option>
+        <option name="leaflet_maps_app.maps-plus.bingMapsLabelLanguage">en-US</option>
+        <option name="leaflet_maps_app.maps-plus.bingMapsTileLayer">CanvasLight</option>
+        <option name="leaflet_maps_app.maps-plus.cluster">0</option>
+        <option name="leaflet_maps_app.maps-plus.contextMenu">1</option>
+        <option name="leaflet_maps_app.maps-plus.criticalThreshold">80</option>
+        <option name="leaflet_maps_app.maps-plus.defaultHeight">600</option>
+        <option name="leaflet_maps_app.maps-plus.disableClusteringAtZoom">0</option>
+        <option name="leaflet_maps_app.maps-plus.drilldown">0</option>
+        <option name="leaflet_maps_app.maps-plus.drilldownAction">dblclick</option>
+        <option name="leaflet_maps_app.maps-plus.fullScreen">0</option>
+        <option name="leaflet_maps_app.maps-plus.googlePlacesPosition">topleft</option>
+        <option name="leaflet_maps_app.maps-plus.googlePlacesSearch">0</option>
+        <option name="leaflet_maps_app.maps-plus.googlePlacesZoomLevel">12</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapBlur">15</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapColorGradient">{"0.4":"blue","0.6":"cyan","0.7":"lime","0.8":"yellow","1":"red"}</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapEnable">0</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapMinOpacity">1.0</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapOnly">0</option>
+        <option name="leaflet_maps_app.maps-plus.heatmapRadius">25</option>
+        <option name="leaflet_maps_app.maps-plus.i18nLanguage">en</option>
+        <option name="leaflet_maps_app.maps-plus.layerControl">1</option>
+        <option name="leaflet_maps_app.maps-plus.layerControlCollapsed">1</option>
+        <option name="leaflet_maps_app.maps-plus.mapCenterLat">39.50</option>
+        <option name="leaflet_maps_app.maps-plus.mapCenterLon">-98.35</option>
+        <option name="leaflet_maps_app.maps-plus.mapCenterZoom">6</option>
+        <option name="leaflet_maps_app.maps-plus.mapTile">http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png</option>
+        <option name="leaflet_maps_app.maps-plus.maxClusterRadius">80</option>
+        <option name="leaflet_maps_app.maps-plus.maxSpiderfySize">100</option>
+        <option name="leaflet_maps_app.maps-plus.maxZoom">19</option>
+        <option name="leaflet_maps_app.maps-plus.measureActiveColor">#00ff00</option>
+        <option name="leaflet_maps_app.maps-plus.measureCompletedColor">#0066ff</option>
+        <option name="leaflet_maps_app.maps-plus.measureIconPosition">topright</option>
+        <option name="leaflet_maps_app.maps-plus.measureLocalization">en</option>
+        <option name="leaflet_maps_app.maps-plus.measurePrimaryAreaUnit">acres</option>
+        <option name="leaflet_maps_app.maps-plus.measurePrimaryLengthUnit">feet</option>
+        <option name="leaflet_maps_app.maps-plus.measureSecondaryAreaUnit">sqmiles</option>
+        <option name="leaflet_maps_app.maps-plus.measureSecondaryLengthUnit">miles</option>
+        <option name="leaflet_maps_app.maps-plus.measureTool">1</option>
+        <option name="leaflet_maps_app.maps-plus.minZoom">1</option>
+        <option name="leaflet_maps_app.maps-plus.multiplePopups">0</option>
+        <option name="leaflet_maps_app.maps-plus.pathColorList">#0003F0,#D43C29,darkgreen,0xe2d400,darkred,#23A378</option>
+        <option name="leaflet_maps_app.maps-plus.pathSplitInterval">600</option>
+        <option name="leaflet_maps_app.maps-plus.pathSplits">0</option>
+        <option name="leaflet_maps_app.maps-plus.permanentTooltip">0</option>
+        <option name="leaflet_maps_app.maps-plus.playbackSpeed">100</option>
+        <option name="leaflet_maps_app.maps-plus.playbackTickLength">50</option>
+        <option name="leaflet_maps_app.maps-plus.rangeOneBgColor">#B5E28C</option>
+        <option name="leaflet_maps_app.maps-plus.rangeOneFgColor">#6ECC39</option>
+        <option name="leaflet_maps_app.maps-plus.rangeThreeBgColor">#FD9C73</option>
+        <option name="leaflet_maps_app.maps-plus.rangeThreeFgColor">#F18017</option>
+        <option name="leaflet_maps_app.maps-plus.rangeTwoBgColor">#F1D357</option>
+        <option name="leaflet_maps_app.maps-plus.rangeTwoFgColor">#F0C20C</option>
+        <option name="leaflet_maps_app.maps-plus.refreshInterval">0</option>
+        <option name="leaflet_maps_app.maps-plus.renderer">svg</option>
+        <option name="leaflet_maps_app.maps-plus.scrollWheelZoom">1</option>
+        <option name="leaflet_maps_app.maps-plus.showPathLines">0</option>
+        <option name="leaflet_maps_app.maps-plus.showPlayback">0</option>
+        <option name="leaflet_maps_app.maps-plus.showPlaybackDateControl">1</option>
+        <option name="leaflet_maps_app.maps-plus.showPlaybackPlayControl">1</option>
+        <option name="leaflet_maps_app.maps-plus.showPlaybackSliderControl">1</option>
+        <option name="leaflet_maps_app.maps-plus.showProgress">1</option>
+        <option name="leaflet_maps_app.maps-plus.singleMarkerMode">0</option>
+        <option name="leaflet_maps_app.maps-plus.spiderfyDistanceMultiplier">1</option>
+        <option name="leaflet_maps_app.maps-plus.splunkVersionCheck">1</option>
+        <option name="leaflet_maps_app.maps-plus.stickyTooltip">1</option>
+        <option name="leaflet_maps_app.maps-plus.warningThreshold">55</option>
+        <option name="refresh.display">progressbar</option>
+      </viz>
+    </panel>
+  </row>
+</form>

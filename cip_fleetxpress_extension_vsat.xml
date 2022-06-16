@@ -1,0 +1,93 @@
+<form hideFilters="true" theme="dark">
+  <label>Fleet Xpress - Retail Vsat Overview</label>
+  <search id="selectionSearch">
+    <query>
+        | inputlookup masterPulseCustomerAutoLookup
+        | search guid=$selectedGuid$
+        | lookup OMSCustomerAutoLookup guid OUTPUT xlVsatMgmtIp 
+        | fields customerId guid vesselName contractPartnerId modem_serial xlVsatMgmtIp
+      </query>
+    <earliest>-15m</earliest>
+    <latest>now</latest>
+  </search>
+  <fieldset>
+    <input type="dropdown" token="modem_serial" depends="$fakeToken$" searchWhenChanged="true">
+      <label>someLabel</label>
+      <search>
+        <query>| inputlookup masterPulseCustomerAutoLookup
+                | search guid=$selectedGuid$
+                | fields modem_serial</query>
+      </search>
+      <fieldForLabel>modem_serial</fieldForLabel>
+      <fieldForValue>modem_serial</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+    <input type="dropdown" token="selectedDid" depends="$suberSneaky$" searchWhenChanged="true">
+      <label>selectedDid</label>
+      <fieldForLabel>gxTerminalDid</fieldForLabel>
+      <fieldForValue>gxTerminalDid</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search>
+        <query>| loadjob savedsearch="okheggdal:IM-TA-Global-Configurations:rp_factCibSubscriptions"
+        | search gxTerminalObjectName=*$modem_serial$</query>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <search base="selectionSearch">
+          <query>fields guid</query>
+        </search>
+        <option name="underLabel">GUID</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields customerId</query>
+        </search>
+        <option name="underLabel">Customer Number</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields vesselName</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Ship Name</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields xlVsatMgmtIp</query>
+        </search>
+        <option name="underLabel">Router IP</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>| eval cmId = "CX751." + modem_serial | fields cmId</query>
+        </search>
+        <option name="underLabel">Terminal Name</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel ref="cip_system_details_vsat"></panel>
+    <panel ref="svnStatusOverTime"></panel>
+  </row>
+  <row>
+    <panel ref="cip_vsat_availability_vsat"></panel>
+  </row>
+  <row>
+    <panel ref="fleetXpressGxUsage"></panel>
+  </row>
+  <row>
+    <panel ref="cip_antenna_tracking_vsat"></panel>
+  </row>
+  <row>
+    <panel ref="cip_rf_details_vsat"></panel>
+    <panel ref="cip_idirect_details_vsat"></panel>
+  </row>
+</form>

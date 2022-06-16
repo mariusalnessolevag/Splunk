@@ -1,0 +1,415 @@
+<form theme="dark">
+  <label>Fleet Xpress - Retail Vessel Overview</label>
+  <search id="capChartertBase">
+    <query>
+          index=gx-network-data sourcetype=sspc_stats_stream sspc_svn=1011 host=$selectedDid$
+          | rename "SSPC Total Downstream Usage" as outbound, "SSPC Total Upstream Usage" as inbound, "SSPC Downstream
+          CIR
+          demand in bytes" as outboundCirDemand, "SSPC Upstream CIR demand in bytes" as inboundCirDemand, "SSPC
+          Downstream
+          MIR demand in bytes" as outboundMIRDemand, "SSPC Upstream MIR demand in bytes" as inboundMIRDemand
+          | table _time host sspc_svn inbound outbound outboundCirDemand inboundCirDemand outboundMIRDemand
+          inboundMIRDemand
+        </query>
+    <earliest>$selectedCapCharterTime.earliest$</earliest>
+    <latest>$selectedCapCharterTime.latest$</latest>
+    <progress>
+      <condition match="'job.resultCount' &gt; 0">
+        <set token="showCapCharter">true</set>
+      </condition>
+      <condition>
+        <unset token="showCapCharter"></unset>
+      </condition>
+    </progress>
+  </search>
+  <search id="hotspotBase">
+    <query>
+          index=gx-network-data sourcetype=sspc_stats_stream sspc_svn=1015 host=$selectedDid$
+          | rename "SSPC Total Downstream Usage" as outbound, "SSPC Total Upstream Usage" as inbound, "SSPC Downstream
+          CIR
+          demand in bytes" as outboundCirDemand, "SSPC Upstream CIR demand in bytes" as inboundCirDemand, "SSPC
+          Downstream
+          MIR demand in bytes" as outboundMIRDemand, "SSPC Upstream MIR demand in bytes" as inboundMIRDemand
+          | table _time host sspc_svn inbound outbound outboundCirDemand inboundCirDemand outboundMIRDemand
+          inboundMIRDemand
+        </query>
+    <earliest>$selectedHotSpotTime.earliest$</earliest>
+    <latest>$selectedHotSpotTime.latest$</latest>
+    <progress>
+      <condition match="'job.resultCount' &gt; 0">
+        <set token="showHotSpot">true</set>
+      </condition>
+      <condition>
+        <unset token="showHotSpot"></unset>
+      </condition>
+    </progress>
+  </search>
+  <fieldset submitButton="false">
+    <input type="checkbox" token="selectedHiddenDetails">
+      <label></label>
+      <choice value="true">Show/Hide Status and Equipment Tables</choice>
+      <delimiter> </delimiter>
+    </input>
+    <input type="checkbox" token="selectedLinks">
+      <label></label>
+      <choice value="true">Links</choice>
+    </input>
+    <input type="dropdown" token="selectedCustomerId" depends="$suberSneaky$" searchWhenChanged="false">
+      <label>selectedCustomerId</label>
+      <fieldForLabel>customerId</fieldForLabel>
+      <fieldForValue>customerId</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search id="selectionSearch">
+        <query>
+        | inputlookup masterPulseCustomerAutoLookup
+        | search guid=$selectedGuid$
+        | lookup OMSCustomerAutoLookup guid OUTPUT xlVsatMgmtIp 
+        | fields customerId guid vesselName contractPartnerId modem_serial xlVsatMgmtIp
+      </query>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="selectedHostGuid" depends="$suberSneaky$" searchWhenChanged="false">
+      <label>selectedHostGuid</label>
+      <fieldForLabel>hostGuid</fieldForLabel>
+      <fieldForValue>hostGuid</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search base="selectionSearch">
+        <query>
+        | eval hostGuid = "GUID" + guid
+      </query>
+      </search>
+    </input>
+    <input type="dropdown" token="selectedVesselName" depends="$suberSneaky$">
+      <label>selectedVesselName</label>
+      <fieldForLabel>vesselName</fieldForLabel>
+      <fieldForValue>vesselName</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search base="selectionSearch">
+        <query>
+        | fields vesselName
+      </query>
+      </search>
+    </input>
+    <input type="dropdown" token="selectedContractPartnerId" depends="$suberSneaky$">
+      <label>selectedContractPartnerId</label>
+      <fieldForLabel>contractPartnerId</fieldForLabel>
+      <fieldForValue>contractPartnerId</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search base="selectionSearch">
+        <query>
+        | fields contractPartnerId
+      </query>
+      </search>
+    </input>
+    <input type="dropdown" token="selectedCoreModuleId" depends="$suberSneaky$">
+      <label>selectedCoreModuleId</label>
+      <fieldForLabel>modem_serial</fieldForLabel>
+      <fieldForValue>modem_serial</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search base="selectionSearch">
+        <query>
+        | fields modem_serial
+      </query>
+      </search>
+    </input>
+    <input type="dropdown" token="selectedDid" depends="$suberSneaky$">
+      <label>selectedDid</label>
+      <fieldForLabel>gxTerminalDid</fieldForLabel>
+      <fieldForValue>gxTerminalDid</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search>
+        <query>| loadjob savedsearch="okheggdal:IM-TA-Global-Configurations:rp_factCibSubscriptions"
+        | search gxTerminalObjectName=*$selectedCoreModuleId$</query>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <search base="selectionSearch">
+          <query>fields guid</query>
+        </search>
+        <option name="underLabel">GUID</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields customerId</query>
+        </search>
+        <option name="underLabel">Customer Number</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields vesselName</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Ship Name</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>fields xlVsatMgmtIp</query>
+        </search>
+        <option name="underLabel">Router IP</option>
+      </single>
+      <single>
+        <search base="selectionSearch">
+          <query>| eval cmId = "CX751." + modem_serial | fields cmId</query>
+        </search>
+        <option name="underLabel">Terminal Name</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$selectedLinks$">
+      <html>
+        <ul>
+          <li>
+            <a href="http://pulseintranet.inmarsat.com/businessUnit/$selectedContractPartnerId$/_layouts/15/inmarsat.intranet.businessunits/Vessels/Vessel.aspx?VesselID=$selectedCustomerId$" target="_blank">Pulse Vessel Page for $selectedVesselName$</a>
+          </li>
+          <li>
+            <a href="http://update.mysevsat.com/sevsatupdate/protected/get?section=update-admin&amp;module=entry#projectUpdateList/$selectedGuid$" target="_blank">OMS Project Page for $selectedVesselName$</a>
+          </li>
+        </ul>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel ref="fleetXpressServiceStatus" depends="$selectedHiddenDetails$"></panel>
+  </row>
+  <row>
+    <panel ref="fleetXpressLinkSystemStatus" depends="$selectedHiddenDetails$"></panel>
+  </row>
+  <row>
+    <panel ref="fleetXpressCustomerProductDetails" depends="$selectedHiddenDetails$"></panel>
+  </row>
+  <row>
+    <panel ref="fleetXpressServiceStatusOverTime"></panel>
+    <panel ref="fleetXpressSystemStatusOverTime"></panel>
+  </row>
+  <row>
+    <panel ref="fleetXpressAcuDetails"></panel>
+  </row>
+  <row>
+    <panel ref="inmarsat_cip_insd_blockage_detector"></panel>
+  </row>
+  <row>
+    <panel ref="splunkStreamInsdCip"></panel>
+  </row>
+  <row>
+    <panel depends="$showCapCharter$">
+      <title>GX Network Data - Cap/Charter</title>
+      <input type="time" token="selectedCapCharterTime">
+        <label>Time</label>
+        <default>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <input type="multiselect" token="selectedDemand">
+        <label>Demand</label>
+        <choice value="">None</choice>
+        <choice value="avg(eval(outboundCirDemand*8/600/1024)) as outboundCirDemand">SSPC Downstream CIR demand</choice>
+        <choice value="avg(eval(inboundCirDemand*8/600/1024)) as inboundCirDemand">SSPC Upstream CIR demand</choice>
+        <choice value="avg(eval(outboundMIRDemand*8/600/1024)) as outboundMIRDemand">SSPC Downstream MIR demand</choice>
+        <choice value="avg(eval(inboundMIRDemand*8/600/1024)) as inboundMIRDemand">SSPC Upstream MIR demand</choice>
+        <prefix> </prefix>
+        <initialValue></initialValue>
+        <delimiter> </delimiter>
+      </input>
+      <chart>
+        <title>Speed for Cap/Charter</title>
+        <search base="capChartertBase">
+          <query>| where sspc_svn=1011
+            | timechart span=10m avg(eval(inbound*8/300/1024)) as inbound avg(eval(outbound*8/300/1024)) as outbound
+            $selectedDemand$</query>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.overlayFields">inboundCirDemand,outboundCirDemand,outboundMIRDemand,inboundMIRDemand</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="charting.fieldColors">{"inbound": 0xdab0c2, "outbound": 0xb0dac8}</option>
+      </chart>
+      <chart>
+        <title>Volume for Cap/Charter</title>
+        <search base="capChartertBase">
+          <query>| where sspc_svn=1011
+            | timechart span=10m sum(eval(inbound/1024/1024)) as inbound sum(eval(outbound/1024/1024)) as outbound
+          </query>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"inbound": 0xdab0c2, "outbound": 0xb0dac8}</option>
+      </chart>
+      <single>
+        <search base="capChartertBase">
+          <query>
+            | where sspc_svn="1011"
+            | stats sum(eval(outbound/1024/1024/1024)) as volume
+          </query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0xb0dac8"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Download Volume</option>
+        <option name="unit">GB</option>
+        <option name="useColors">1</option>
+      </single>
+      <single>
+        <search base="capChartertBase">
+          <query>
+            | where sspc_svn="1011"
+            | stats sum(eval(inbound/1024/1024/1024)) as volume
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xdc4e41","0xdab0c2"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Upload Volume</option>
+        <option name="unit">GB</option>
+        <option name="useColors">1</option>
+      </single>
+      <single>
+        <search base="capChartertBase">
+          <query>
+            | where sspc_svn="1011"
+            | stats avg(eval(outbound*8/300/1024)) as kbps
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xdc4e41","0xb0dac8"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Average Download Speed</option>
+        <option name="unit">Kbps</option>
+        <option name="useColors">1</option>
+      </single>
+      <single>
+        <search base="capChartertBase">
+          <query>
+            | where sspc_svn="1011"
+            | stats avg(eval(inbound*8/300/1024)) as kbps
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xdc4e41","0xdab0c2"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Average Upload Speed</option>
+        <option name="unit">Kbps</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$showHotSpot$">
+      <title>GX Network Data - Fleet HotSpot</title>
+      <input type="time" token="selectedHotSpotTime">
+        <label>Time</label>
+        <default>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <chart>
+        <title>Speed for HotSpot</title>
+        <search base="hotspotBase">
+          <query>| where sspc_svn=1015
+            | timechart span=10m avg(eval(inbound*8/600/1024)) as inbound avg(eval(outbound*8/600/1024)) as outbound
+          </query>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"inbound": 0xb0c2da, "outbound": 0xdab3b0}</option>
+      </chart>
+      <chart>
+        <title>Volume for HotSpot</title>
+        <search base="hotspotBase">
+          <query>| where sspc_svn=1015
+            | timechart span=10m sum(eval(inbound/1024/1024)) as inbound sum(eval(outbound/1024/1024)) as outbound
+          </query>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"inbound": 0xb0c2da, "outbound": 0xdab3b0}</option>
+      </chart>
+      <single>
+        <search base="hotspotBase">
+          <query>
+            | where sspc_svn="1015"
+            | stats sum(eval(outbound/1024/1024/1024)) as volume
+          </query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xdc4e41","0xb0c2da"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Download Volume</option>
+        <option name="unit">GB</option>
+        <option name="useColors">1</option>
+      </single>
+      <single>
+        <search base="hotspotBase">
+          <query>
+            | where sspc_svn="1015"
+            | stats sum(eval(inbound/1024/1024/1024)) as volume
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xdc4e41","0xc2dab0"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Upload Volume</option>
+        <option name="unit">GB</option>
+        <option name="useColors">1</option>
+      </single>
+      <single>
+        <search base="hotspotBase">
+          <query>
+            | where sspc_svn="1015"
+            | stats avg(eval(outbound*8/300/1024)) as kbps
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xdc4e41","0xb0c2da"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Average Download Speed</option>
+        <option name="unit">Kbps</option>
+        <option name="useColors">1</option>
+      </single>
+      <single>
+        <search base="hotspotBase">
+          <query>
+            | where sspc_svn="1015"
+            | stats avg(eval(inbound*8/300/1024)) as kbps
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xdc4e41","0xc2dab0"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Average Upload Speed</option>
+        <option name="unit">Kbps</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+</form>
