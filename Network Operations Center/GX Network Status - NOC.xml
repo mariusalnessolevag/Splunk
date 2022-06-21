@@ -1,0 +1,1967 @@
+<dashboard refresh="300">
+  <label>GX Network Status - NOC</label>
+  <fieldset submitButton="false" autoRun="true">
+    <html>
+       <style type="text/css">
+         .single-value .single-result {
+     font-size: 30px !important;
+         text-align: left;
+        
+ }
+         
+       </style>
+     </html>
+  </fieldset>
+  <row>
+    <panel>
+      <title>AOR</title>
+      <single>
+        <title>% Route Difference</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" AOR|stats first(pp_tpa) AS ppcount, first(asr1k) AS asr | eval percent=abs(100-(ppcount/asr)*100) | table percent</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="underLabel">PP_TPA vs ASR 1K</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>AOR</title>
+      <single>
+        <title>% Dropped</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" AOR | stats avg(asr1k) as avasr, first(asr1k) as asdiff | eval drop=round(100-(asdiff/avasr)*100) | eval perdrop= if(drop &lt; 0, 0, drop)   | table  perdrop</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>AOR</title>
+      <single>
+        <title>% State Change</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" AOR earliest=-24h | stats  first(EXTRA_FIELD_8) as bounce, avg(asr1k) as avasr| eval percent=((bounce/avasr)*100)| table percent</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>AOR</title>
+      <single>
+        <title>% LCs Offline</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" AOR| head 1| stats first(EXTRA_FIELD_9) as active, first(EXTRA_FIELD_11) as failed |eval lcavail=((failed)/(active)*100)|table lcavail</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>IOR</title>
+      <single>
+        <title>% Route Difference</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOR|stats first(pp_tpa) AS ppcount, first(asr1k) AS asr | eval percent=abs(100-(ppcount/asr)*100) | table percent</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="underLabel">PP_TPA vs ASR 1K</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>IOR</title>
+      <single>
+        <title>% Dropped</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOR | stats avg(asr1k) as avasr, first(asr1k) as asdiff | eval drop=round(100-(asdiff/avasr)*100) | eval perdrop= if(drop &lt; 0, 0, drop)   | table perdrop</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>IOR</title>
+      <single>
+        <title>% State Change</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOR earliest=-24h | stats  first(EXTRA_FIELD_8) as bounce, avg(asr1k) as avasr| eval percent=((bounce/avasr)*100)| table percent</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>IOR</title>
+      <single>
+        <title>% LCs Offline</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOR| head 1| stats first(EXTRA_FIELD_9) as active, first(EXTRA_FIELD_11) as failed |eval lcavail=((failed)/(active)*100)|table lcavail</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>IOW</title>
+      <single>
+        <title>% Route Difference</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOW|stats first(pp_tpa) AS ppcount, first(asr1k) AS asr | eval percent=abs(100-(ppcount/asr)*100) | table percent</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">PP_TPA vs ASR 1K</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>IOW</title>
+      <single>
+        <title>% Dropped</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOW | stats avg(asr1k) as avasr, first(asr1k) as asdiff | eval drop=round(100-(asdiff/avasr)*100) | eval perdrop= if(drop &lt; 0, 0, drop)   | table perdrop</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>IOW</title>
+      <single>
+        <title>% State Change</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOW earliest=-24h | stats  first(EXTRA_FIELD_8) as bounce, avg(asr1k) as avasr| eval percent=((bounce/avasr)*100)| table percent</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>IOW</title>
+      <single>
+        <title>% LCs Offline</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOW| head 1| stats first(EXTRA_FIELD_9) as active, first(EXTRA_FIELD_11) as failed |eval lcavail=((failed)/(active)*100)|table lcavail</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/sites.csv" AOR|stats first(sas_name)</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">AOR</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" AOR|stats first(asr1k) as pingabl</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[25,40]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Active Terminals (AOR)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" AOR|stats first(EXTRA_FIELD_8) AS pp_bounce</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[7,18]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Terminal Bounce (AOR)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" AOR| head 1|table EXTRA_FIELD_11</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">false</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Failed Line Card (AOR)</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/sites.csv" IOR | eval Actual = case(sas_name = "Meridian","Merredin", sas_name = "Perth","Perth") | stats first(Actual)</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">IOR</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOR|stats first(asr1k) as pingabl</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[30,50]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Active Terminals (IOR)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOR|stats first(EXTRA_FIELD_8) AS pp_bounce</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[10,20]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Terminal Bounce (IOR)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOR| head 1|table EXTRA_FIELD_11</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">false</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Failed Line Card (IOR)</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/sites.csv" IOW |stats first(sas_name)</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">IOW</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOW|stats first(asr1k) as pingabl</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[30,50]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Active Terminals (IOW)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOW|stats first(EXTRA_FIELD_8) AS pp_bounce</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[10,20]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Terminal Bounce (IOW)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" IOW| head 1|table EXTRA_FIELD_11</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Failed Line Card (IOW)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>iNet Processes AOR</title>
+        <search>
+          <query>source="/home/inmarsat/gsr_inet.csv" inet&gt;100 PP=LL OR WP |eval pp_ag=if(isnull(pp_ag),0,1) | eval pp_acq=if(isnull(pp_acq),0,1) | eval pp_ag_div=if(isnull(pp_ag_div),0,1)| eval pp_cng=if(isnull(pp_cng),0,1)| eval pp_da=if(isnull(pp_da),0,1)| eval pp_iac=if(isnull(pp_iac),0,1)| eval pp_mc=if(isnull(pp_mc),0,1)| eval pp_na=if(isnull(pp_na),0,1) | chart first(pp_ag) as pp_ag first(pp_acq) as pp_acq first(pp_ag_div) as pp_ag_div first(pp_cng) as pp_cng first(pp_da) as pp_da first(pp_iac) as pp_iac first(pp_mc) as pp_mc first(pp_na) as pp_na by inet</query>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>PP Processes AOR</title>
+        <search>
+          <query>source="/home/inmarsat/pp_process_count.csv" [search source="/home/inmarsat/sites.csv" LL OR WP | stats first(sas) AS SAS | table SAS ]   | eval pp_rt=if(pp_rt&gt;0,1,0)  | eval pp_tpa=if(pp_tpa&gt;0,1,0) | eval pp_sr=if(pp_sr&gt;0,1,0) |  eval pp_se_proxy=if(pp_se_proxy&gt;0,1,0) | eval pp_tun=if(pp_tun&gt;0,1,0) | chart first(pp_rt) as pp_rt  first(pp_tpa) as pp_tpa  first(pp_sr) as pp_sr  first(pp_se_proxy) as pp_se_proxy first(pp_tun) as pp_tun by server_addr</query>
+          <earliest>-90m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>iNet Processes IOR</title>
+        <search>
+          <query>source="/home/inmarsat/gsr_inet.csv" inet&gt;100 PP=PH OR ME  |eval pp_ag=if(isnull(pp_ag),0,1) | eval pp_acq=if(isnull(pp_acq),0,1) | eval pp_ag_div=if(isnull(pp_ag_div),0,1)| eval pp_cng=if(isnull(pp_cng),0,1)| eval pp_da=if(isnull(pp_da),0,1)| eval pp_iac=if(isnull(pp_iac),0,1)| eval pp_mc=if(isnull(pp_mc),0,1)| eval pp_na=if(isnull(pp_na),0,1) | chart first(pp_ag) as pp_ag first(pp_acq) as pp_acq first(pp_ag_div) as pp_ag_div first(pp_cng) as pp_cng first(pp_da) as pp_da first(pp_iac) as pp_iac first(pp_mc) as pp_mc first(pp_na) as pp_na by inet</query>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>PP Processes IOR</title>
+        <search>
+          <query>source="/home/inmarsat/pp_process_count.csv" [search source="/home/inmarsat/sites.csv" PH OR ME | stats first(sas) AS SAS | table SAS ]   | eval pp_rt=if(pp_rt&gt;0,1,0)  | eval pp_tpa=if(pp_tpa&gt;0,1,0) | eval pp_sr=if(pp_sr&gt;0,1,0) |  eval pp_se_proxy=if(pp_se_proxy&gt;0,1,0) | eval pp_tun=if(pp_tun&gt;0,1,0) | chart first(pp_rt) as pp_rt  first(pp_tpa) as pp_tpa  first(pp_sr) as pp_sr  first(pp_se_proxy) as pp_se_proxy first(pp_tun) as pp_tun by server_addr</query>
+          <earliest>-90m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>iNet Processes IOW</title>
+        <search>
+          <query>source="/home/inmarsat/gsr_inet.csv" inet&gt;100 PP=NM OR FC |eval pp_ag=if(isnull(pp_ag),0,1) | eval pp_acq=if(isnull(pp_acq),0,1) | eval pp_ag_div=if(isnull(pp_ag_div),0,1)| eval pp_cng=if(isnull(pp_cng),0,1)| eval pp_da=if(isnull(pp_da),0,1)| eval pp_iac=if(isnull(pp_iac),0,1)| eval pp_mc=if(isnull(pp_mc),0,1)| eval pp_na=if(isnull(pp_na),0,1) | chart first(pp_ag) as pp_ag first(pp_acq) as pp_acq first(pp_ag_div) as pp_ag_div first(pp_cng) as pp_cng first(pp_da) as pp_da first(pp_iac) as pp_iac first(pp_mc) as pp_mc first(pp_na) as pp_na by inet</query>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>PP Processes IOW</title>
+        <search>
+          <query>source="/home/inmarsat/pp_process_count.csv" [search source="/home/inmarsat/sites.csv"NM OR FC | stats first(sas) AS SAS | table SAS ]   | eval pp_rt=if(pp_rt&gt;0,1,0)  | eval pp_tpa=if(pp_tpa&gt;0,1,0) | eval pp_sr=if(pp_sr&gt;0,1,0) |  eval pp_se_proxy=if(pp_se_proxy&gt;0,1,0) | eval pp_tun=if(pp_tun&gt;0,1,0) | chart first(pp_rt) as pp_rt  first(pp_tpa) as pp_tpa  first(pp_sr) as pp_sr  first(pp_se_proxy) as pp_se_proxy first(pp_tun) as pp_tun by server_addr</query>
+          <earliest>-90m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>NER</title>
+      <single>
+        <title>% Route Difference</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" THR|stats first(pp_tpa) AS ppcount, first(asr1k) AS asr | eval percent=abs(100-(ppcount/asr)*100) | table percent</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="underLabel">PP_TPA vs ASR 1K</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>NER</title>
+      <single>
+        <title>% Dropped</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" THR | stats avg(asr1k) as avasr, first(asr1k) as asdiff | eval drop=round(100-(asdiff/avasr)*100) | eval perdrop= if(drop &lt; 0, 0, drop)   | table  perdrop</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>NER</title>
+      <single>
+        <title>% State Change</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" THR earliest=-24h asr1k&gt;0 | stats  first(EXTRA_FIELD_8) as bounce, avg(asr1k) as avasr| eval percent=((bounce/avasr)*100)| table percent</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>NER</title>
+      <single>
+        <title>% LCs Offline</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" THR| head 1| stats first(EXTRA_FIELD_9) as active, first(EXTRA_FIELD_11) as failed |eval lcavail=((failed)/(active)*100)|table lcavail</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>POR</title>
+      <single>
+        <title>% Route Difference</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" POR|stats first(pp_tpa) AS ppcount, first(asr1k) AS asr | eval percent=abs(100-(ppcount/asr)*100) | table percent</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="underLabel">PP_TPA vs ASR 1K</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>POR</title>
+      <single>
+        <title>% Dropped</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" POR | stats avg(asr1k) as avasr, first(asr1k) as asdiff | eval drop=round(100-(asdiff/avasr)*100) | eval perdrop= if(drop &lt; 0, 0, drop)   | table perdrop</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>POR</title>
+      <single>
+        <title>% LCs Offline</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" POR| head 1| stats first(EXTRA_FIELD_9) as active, first(EXTRA_FIELD_11) as failed |eval lcavail=((failed)/(active)*100)|table lcavail</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>POR</title>
+      <single>
+        <title>% State Change</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" POR earliest=-24h | stats  first(EXTRA_FIELD_8) as bounce, avg(asr1k) as avasr| eval percent=((bounce/avasr)*100)| table percent</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+      </single>
+    </panel>
+    <panel>
+      <title>WER</title>
+      <single>
+        <title>% Route Difference</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" WER|stats first(pp_tpa) AS ppcount, first(asr1k) AS asr | eval percent=abs(100-(ppcount/asr)*100) | table percent</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">PP_TPA vs ASR 1K</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>WER</title>
+      <single>
+        <title>% Dropped</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" WER | stats avg(asr1k) as avasr, first(asr1k) as asdiff | eval drop=round(100-(asdiff/avasr)*100) | eval perdrop= if(drop &lt; 0, 0, drop)   | table  perdrop</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>WER</title>
+      <single>
+        <title>% State Change</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" WER earliest=-24h asr1k&gt;0 | stats  first(EXTRA_FIELD_8) as bounce, avg(asr1k) as avasr| eval percent=((bounce/avasr)*100)| table percent</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>WER</title>
+      <single>
+        <title>% LCs Offline</title>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" WER| head 1| stats first(EXTRA_FIELD_9) as active, first(EXTRA_FIELD_11) as failed |eval lcavail=((failed)/(active)*100)|table lcavail</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="afterLabel">%</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">60</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[5,10]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/sites.csv" THR|stats first(sas_name)</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">NER</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" THR|stats first(asr1k) as pingabl</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[25,40]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Active Terminals (NER)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" THR|stats first(EXTRA_FIELD_8) AS pp_bounce</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[7,18]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Terminal Bounce (NER)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" THR| head 1|table EXTRA_FIELD_11</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">false</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Failed Line Card (NER)</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/sites.csv" POR | eval Actual = case(sas_name = "Wakeworth","Warkworth", sas_name = "Auckland","Auckland") | stats first(Actual)</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">POR</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" POR|stats first(asr1k) as pingabl</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[8,15]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Active Terminals (POR)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" POR|stats first(EXTRA_FIELD_8) AS pp_bounce</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[4,10]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Terminal Bounce (POR)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count.txt" POR| head 1|table EXTRA_FIELD_11</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">false</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Failed Line Card (POR)</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/sites.csv" WER|stats first(sas_name)</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">WER</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count_v2.csv" WER|stats first(asrik) as pingabl</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[25,40]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Active Terminals (WER)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count_v2.csv" WER|stats first(bounce_asr1k) AS pp_bounce</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[7,18]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Terminal Bounce (WER)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_count_v2.csv" WER| head 1|table LC_Failed</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="underLabel">Failed Line Card (WER)</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>iNet Processes NER</title>
+        <search>
+          <query>source="/home/inmarsat/gsr_inet.csv" inet&gt;100 PP=NI |eval pp_ag=if(isnull(pp_ag),0,1) | eval pp_acq=if(isnull(pp_acq),0,1) | eval pp_ag_div=if(isnull(pp_ag_div),0,1)| eval pp_cng=if(isnull(pp_cng),0,1)| eval pp_da=if(isnull(pp_da),0,1)| eval pp_iac=if(isnull(pp_iac),0,1)| eval pp_mc=if(isnull(pp_mc),0,1)| eval pp_na=if(isnull(pp_na),0,1) | chart first(pp_ag) as pp_ag first(pp_acq) as pp_acq first(pp_ag_div) as pp_ag_div first(pp_cng) as pp_cng first(pp_da) as pp_da first(pp_iac) as pp_iac first(pp_mc) as pp_mc first(pp_na) as pp_na by inet</query>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>PP Processes NER</title>
+        <search>
+          <query>source="/home/inmarsat/pp_process_count.csv" NI  | eval pp_rt=if(pp_rt&gt;0,1,0)  | eval pp_tpa=if(pp_tpa&gt;0,1,0) | eval pp_sr=if(pp_sr&gt;0,1,0) |  eval pp_se_proxy=if(pp_se_proxy&gt;0,1,0) | eval pp_tun=if(pp_tun&gt;0,1,0) | chart first(pp_rt) as pp_rt  first(pp_tpa) as pp_tpa  first(pp_sr) as pp_sr  first(pp_se_proxy) as pp_se_proxy first(pp_tun) as pp_tun by server_addr</query>
+          <earliest>-90m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>iNet Processes POR</title>
+        <search>
+          <query>source="/home/inmarsat/gsr_inet.csv" inet&gt;100 PP=AU OR WK |eval pp_ag=if(isnull(pp_ag),0,1) | eval pp_acq=if(isnull(pp_acq),0,1) | eval pp_ag_div=if(isnull(pp_ag_div),0,1)| eval pp_cng=if(isnull(pp_cng),0,1)| eval pp_da=if(isnull(pp_da),0,1)| eval pp_iac=if(isnull(pp_iac),0,1)| eval pp_mc=if(isnull(pp_mc),0,1)| eval pp_na=if(isnull(pp_na),0,1) | chart first(pp_ag) as pp_ag first(pp_acq) as pp_acq first(pp_ag_div) as pp_ag_div first(pp_cng) as pp_cng first(pp_da) as pp_da first(pp_iac) as pp_iac first(pp_mc) as pp_mc first(pp_na) as pp_na by inet</query>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>PP Processes POR</title>
+        <search>
+          <query>source="/home/inmarsat/pp_process_count.csv" [search source="/home/inmarsat/sites.csv" AU OR WK | stats first(sas) AS SAS | table SAS ]   | eval pp_rt=if(pp_rt&gt;0,1,0)  | eval pp_tpa=if(pp_tpa&gt;0,1,0) | eval pp_sr=if(pp_sr&gt;0,1,0) |  eval pp_se_proxy=if(pp_se_proxy&gt;0,1,0) | eval pp_tun=if(pp_tun&gt;0,1,0) | chart first(pp_rt) as pp_rt  first(pp_tpa) as pp_tpa  first(pp_sr) as pp_sr  first(pp_se_proxy) as pp_se_proxy first(pp_tun) as pp_tun by server_addr</query>
+          <earliest>-90m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>iNet Processes WER</title>
+        <search>
+          <query>source="/home/inmarsat/gsr_inet.csv" inet&gt;100 PP=BE |eval pp_ag=if(isnull(pp_ag),0,1) | eval pp_acq=if(isnull(pp_acq),0,1) | eval pp_ag_div=if(isnull(pp_ag_div),0,1)| eval pp_cng=if(isnull(pp_cng),0,1)| eval pp_da=if(isnull(pp_da),0,1)| eval pp_iac=if(isnull(pp_iac),0,1)| eval pp_mc=if(isnull(pp_mc),0,1)| eval pp_na=if(isnull(pp_na),0,1) | chart first(pp_ag) as pp_ag first(pp_acq) as pp_acq first(pp_ag_div) as pp_ag_div first(pp_cng) as pp_cng first(pp_da) as pp_da first(pp_iac) as pp_iac first(pp_mc) as pp_mc first(pp_na) as pp_na by inet</query>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>PP Processes WER</title>
+        <search>
+          <query>source="/home/inmarsat/pp_process_count.csv" BE  | eval pp_rt=if(pp_rt&gt;0,1,0)  | eval pp_tpa=if(pp_tpa&gt;0,1,0) | eval pp_sr=if(pp_sr&gt;0,1,0) |  eval pp_se_proxy=if(pp_se_proxy&gt;0,1,0) | eval pp_tun=if(pp_tun&gt;0,1,0) | chart first(pp_rt) as pp_rt  first(pp_tpa) as pp_tpa  first(pp_sr) as pp_sr  first(pp_se_proxy) as pp_se_proxy first(pp_tun) as pp_tun by server_addr</query>
+          <earliest>-90m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.maximumNumber">1</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval up = if(online&gt;0,1,null) | fields - online | search up=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Total Online</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" hrtime&gt;-96 | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval down = if(online=0,1,null) | fields - online | search down=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Total Offline</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" var=* AND var!=zzp* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval up = if(online&gt;0,1,null) | fields - online | search up=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Commercial Online</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" hrtime&gt;-96 var=* AND var!=zzp* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval down = if(online=0,1,null) | fields - online | search down=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Commercial Offline</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" NOT var="*" OR var=zzp* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval up = if(online&gt;0,1,null) | fields - online | search up=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Test Online</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" NOT var="*" OR var=zzp* hrtime&gt;-96  | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval down = if(online=0,1,null) | fields - online | search down=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Test Offline</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" var=* AND var!=zzp*  EXTRA_FIELD_30=10* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval up = if(online&gt;0,1,null) | fields - online | search up=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Maritime Online</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" hrtime&gt;-96 var=* AND var!=zzp*  EXTRA_FIELD_30=10* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval down = if(online=0,1,null) | fields - online | search down=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Maritime Offline</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" var=* AND var!=zzp*  EXTRA_FIELD_30=20* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval up = if(online&gt;0,1,null) | fields - online | search up=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Land Online</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" hrtime&gt;-96 var=* AND var!=zzp*  EXTRA_FIELD_30=20* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval down = if(online=0,1,null) | fields - online | search down=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Land Offline</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" var=* AND var!=zzp*  EXTRA_FIELD_30=40* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval up = if(online&gt;0,1,null) | fields - online | search up=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xf58f39","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Aero Online</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <search>
+          <query>source="/home/inmarsat/terminal_status_table_all.csv" hrtime&gt;-96 var=* AND var!=zzp*  EXTRA_FIELD_30=40* | eval online=if(hrtime&gt;0,1,0) | stats max(online) as online by name  | eval down = if(online=0,1,null) | fields - online | search down=1 | stats dc(name) AS onlinecount</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf58f39"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">true</option>
+        <option name="showTrendIndicator">true</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">auto</option>
+        <option name="useColors">true</option>
+        <option name="useThousandSeparators">true</option>
+        <option name="linkView">search</option>
+        <option name="drilldown">none</option>
+        <option name="underLabel">Aero Offline</option>
+      </single>
+    </panel>
+  </row>a
+</dashboard>
